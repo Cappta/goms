@@ -31,8 +31,6 @@ func NewRabbitMQService(connection *gohelprabbitmq.Connection) *RabbitMQService 
 // Consume will consume the given queue, asserting the required paths, pass data to be handled and route the response
 func (service *RabbitMQService) Consume(queueName string, handle handler, requiredPaths ...string) (err error) {
 	forwardToPath := fmt.Sprintf("%s.ForwardTo", queueName)
-	requiredPaths = append(requiredPaths, forwardToPath)
-
 	router := gohelprabbitmq.NewMessageRouter(forwardToPath, service.connection)
 	consumer := gohelprabbitmq.NewSimpleConsumer(service.connection, queueName)
 	service.consumerMap[queueName] = consumer
