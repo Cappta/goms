@@ -37,6 +37,11 @@ func NewHTTPService(address string) (service *HTTPService) {
 	return
 }
 
+// IsRunning returns true if the service is running
+func (service *HTTPService) IsRunning() bool {
+	return service.running
+}
+
 // Handle appends an entry point for the HTTP service given the callback and required paths
 func (service *HTTPService) Handle(method, path string, handle handler, requiredPaths ...string) {
 	service.router.Methods(method).Path(path).HandlerFunc(
