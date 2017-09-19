@@ -47,15 +47,7 @@ func (service *HTTPService) Handle(method, path string, handle handler, required
 	service.router.Methods(method).Path(path).HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
-			defer func() {
-				err := recover()
-				if err == nil {
-					return
-				}
-
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "PANIC: %v", err)
-			}()
+			defer service.recover(w)
 
 			body, err := ioutil.ReadAll(r.Body)
 			if err != nil {
@@ -81,6 +73,16 @@ func (service *HTTPService) Handle(method, path string, handle handler, required
 			fmt.Fprintf(w, container.String())
 		},
 	)
+}
+
+func (service *HTTPService) recover(w http.ResponseWriter) {
+	err := recover()
+	if err == nil {
+		return
+	}
+
+	w.WriteHeader(http.StatusInternalServerError)
+	fmt.Fprintf(w, "PANIC: %v", err)
 }
 
 // Run starts the service
