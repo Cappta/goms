@@ -87,7 +87,7 @@ func (service *HTTPService) recover(w http.ResponseWriter) {
 
 // Run starts the service
 func (service *HTTPService) Run() error {
-	if service.running == true {
+	if service.running {
 		return errServiceRunning
 	}
 
