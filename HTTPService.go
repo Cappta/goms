@@ -2,6 +2,7 @@ package goms
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -51,21 +52,21 @@ func (service *HTTPService) Handle(method, path string, handle handler, required
 
 			body, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				log.Println("Failed to read request body: ", err)
 				w.WriteHeader(http.StatusBadRequest)
+				fprintfAndLog(w, "Failed to read request body: ", err)
 				return
 			}
 			container, err := gohelpgabs.ParseJSON(body)
 
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprintf(w, "Error parsing JSON \"%s\" Content: %s", err.Error(), string(body))
+				fprintfAndLog(w, "Error parsing JSON \"%s\" Content: %s", err.Error(), string(body))
 				return
 			}
 
 			if missingPaths := container.GetMissingPaths(requiredPaths...); len(missingPaths) > 0 {
 				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprintf(w, "Message did not contain: %s", strings.Join(missingPaths, ", "))
+				fprintfAndLog(w, "Message did not contain: %s", strings.Join(missingPaths, ", "))
 				return
 			}
 
@@ -82,7 +83,13 @@ func (service *HTTPService) recover(w http.ResponseWriter) {
 	}
 
 	w.WriteHeader(http.StatusInternalServerError)
-	fmt.Fprintf(w, "PANIC: %v", err)
+	fprintfAndLog(w, "PANIC: %v", err)
+}
+
+func fprintfAndLog(w io.Writer, format string, a ...interface{}) {
+	message := fmt.Sprintf(format, a...)
+	fmt.Fprintf(w, message)
+	log.Println(message)
 }
 
 // Run starts the service

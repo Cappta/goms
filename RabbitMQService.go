@@ -54,12 +54,12 @@ func (service *RabbitMQService) Consume(queueName string, handle handler, requir
 
 		err = router.Route(container)
 		if err != nil {
-			fmt.Println("Failed to respond : " + err.Error())
+			log.Println("Failed to respond : " + err.Error())
 		}
 
 		err = delivery.Ack(false)
 		if err != nil {
-			fmt.Println("Failed to ack a message : " + err.Error())
+			log.Println("Failed to ack a message : " + err.Error())
 		}
 	})
 }
