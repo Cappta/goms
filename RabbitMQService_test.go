@@ -19,14 +19,6 @@ var (
 )
 
 func TestRabbitMQService(t *testing.T) {
-	inputPath := "input"
-	outputPath := "output"
-	requiredPaths := []string{inputPath}
-	handler := func(container *gohelpgabs.Container) {
-		inputContainer := container.PopPath(inputPath)
-		container.SetP(inputContainer.Data(), outputPath)
-	}
-
 	rabbitMQ := gohelprabbitmq.ConnectLocallyWithDefaultUser()
 	rpc := gohelprabbitmq.NewRPC(gohelprabbitmq.NewSimpleConsumer(rabbitMQ, rpcQueueName), time.Second*5)
 	publisher := gohelprabbitmq.NewSimplePublisher(rabbitMQ, fmt.Sprintf("@%s", serviceQueueName))
@@ -34,7 +26,7 @@ func TestRabbitMQService(t *testing.T) {
 	done := make(chan bool)
 	rabbitMQService := NewRabbitMQService(rabbitMQ)
 	go func() {
-		fmt.Println(rabbitMQService.Consume(serviceQueueName, handler, requiredPaths...))
+		fmt.Println(rabbitMQService.Consume(serviceQueueName, inputOutputHandler, requiredPaths...))
 		done <- true
 	}()
 	go rpc.Consume()
@@ -53,35 +45,33 @@ func TestRabbitMQService(t *testing.T) {
 	}
 
 	Convey("Given a running async consumer", t, func() {
-		Convey("Given any string with length between 10 and 100", func() {
-			anyString := AnyString(AnyIntBetween(10, 100))
-			Convey("Given a json container with the string set as value", func() {
-				container := gohelpgabs.New()
-				container.SetP(anyString, inputPath)
-				Convey("When preparing the rpc", func() {
-					callback := rpc.Prepare(container)
-					Convey("Then callback should not be nil", func() {
-						So(callback, ShouldNotBeNil)
-						Convey("When publishing to the test service", func() {
-							publisher.Publish(container.Bytes())
-							Convey("Then rpc should receive the message within 5 seconds", func() {
-								select {
-								case <-time.After(time.Second * 5):
-									t.Fail()
-								case returnedMessage := <-callback:
-									Convey("Then message should not be nil", func() {
-										So(returnedMessage, ShouldNotBeNil)
-										Convey("Then message's body should resemble expected output", func() {
-											container := gohelpgabs.New()
-											container.SetP(anyString, outputPath)
+		anyString := AnyString(AnyIntBetween(10, 100))
+		container := gohelpgabs.New()
+		container.SetP(anyString, inputPath)
 
-											expectedOutput := container.String()
-											So(string(returnedMessage.Body), ShouldResemble, expectedOutput)
-										})
-									})
-								}
+		Convey("When preparing the rpc", func() {
+			callback := rpc.Prepare(container)
+			Convey("Then callback should not be nil", func() {
+				So(callback, ShouldNotBeNil)
+
+				Convey("When publishing to the test service", func() {
+					publisher.Publish(container.Bytes())
+					Convey("Then rpc should receive the message within 5 seconds", func() {
+						select {
+						case <-time.After(time.Second * 5):
+							t.Fail()
+						case returnedMessage := <-callback:
+							Convey("Then message should not be nil", func() {
+								So(returnedMessage, ShouldNotBeNil)
+								Convey("And message's body should resemble expected output", func() {
+									container := gohelpgabs.New()
+									container.SetP(anyString, outputPath)
+
+									expectedOutput := container.String()
+									So(string(returnedMessage.Body), ShouldResemble, expectedOutput)
+								})
 							})
-						})
+						}
 					})
 				})
 			})
