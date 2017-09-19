@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/Cappta/gofixture"
 	"github.com/Cappta/gohelpgabs"
 	"github.com/Cappta/gohelprabbitmq"
 	"github.com/Cappta/gowait"
 
+	. "github.com/Cappta/debugo"
+	. "github.com/Cappta/gofixture"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -31,18 +32,9 @@ func TestRabbitMQService(t *testing.T) {
 	}()
 	go rpc.Consume()
 
-	err := gowait.AwaitNotNil(func() interface{} { return rabbitMQService.GetConsumer(serviceQueueName) }, time.Second*5)
-	if err != nil {
-		panic(err)
-	}
-	err = gohelprabbitmq.NewQueueObserver(rabbitMQ, rabbitMQService.GetConsumer(serviceQueueName).QueueSettings).AwaitConsumer(time.Second * 5)
-	if err != nil {
-		panic(err)
-	}
-	err = gohelprabbitmq.NewQueueObserver(rabbitMQ, rpc.QueueSettings).AwaitConsumer(time.Second * 5)
-	if err != nil {
-		panic(err)
-	}
+	PanicOnError(gowait.AwaitNotNil(func() interface{} { return rabbitMQService.GetConsumer(serviceQueueName) }, time.Second*5))
+	PanicOnError(gohelprabbitmq.NewQueueObserver(rabbitMQ, rabbitMQService.GetConsumer(serviceQueueName).QueueSettings).AwaitConsumer(time.Second * 5))
+	PanicOnError(gohelprabbitmq.NewQueueObserver(rabbitMQ, rpc.QueueSettings).AwaitConsumer(time.Second * 5))
 
 	Convey("Given a running async consumer", t, func() {
 		anyString := AnyString(AnyIntBetween(10, 100))
@@ -78,13 +70,7 @@ func TestRabbitMQService(t *testing.T) {
 		})
 	})
 
-	err = rabbitMQService.StopConsuming(serviceQueueName)
-	if err != nil {
-		panic(err)
-	}
-	err = rpc.StopConsuming()
-	if err != nil {
-		panic(err)
-	}
+	PanicOnError(rabbitMQService.StopConsuming(serviceQueueName))
+	PanicOnError(rpc.StopConsuming())
 	<-done
 }
