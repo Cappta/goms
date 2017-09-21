@@ -74,6 +74,11 @@ func (service *RabbitMQService) StopConsuming(queueName string) (err error) {
 	return consumer.StopConsuming()
 }
 
+// GetConnection retrieves the current rabbitmq connection
+func (service *RabbitMQService) GetConnection() (consumer *gohelprabbitmq.Connection) {
+	return service.connection
+}
+
 // GetConsumer retrieves the consumer for the provided queue
 func (service *RabbitMQService) GetConsumer(queueName string) (consumer *gohelprabbitmq.SimpleConsumer) {
 	return service.consumerMap[queueName]
