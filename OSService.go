@@ -2,6 +2,7 @@ package goms
 
 import (
 	"flag"
+	"log"
 
 	"github.com/kardianos/service"
 )
@@ -45,18 +46,34 @@ func (osService *OSService) Main() (err error) {
 	flag.Parse()
 
 	if installFlag != nil && *installFlag == true {
-		err = osService.service.Install()
-		if err != nil {
+		if err = osService.service.Install(); err != nil {
+			log.Println("Failed to install service: ", err)
 			return
 		}
-		return osService.service.Start()
+		log.Println("Installed service")
+		if err = osService.service.Start(); err != nil {
+			log.Println("Failed to start service: ", err)
+			return
+		}
+		log.Println("Started service")
+		return
 	}
 
 	if uninstallFlag != nil && *uninstallFlag == true {
-		osService.service.Stop()
-		return osService.service.Uninstall()
+		if err = osService.service.Stop(); err != nil {
+			log.Println("Failed to stop service: ", err)
+		}
+		log.Println("Stopped service")
+		if err = osService.service.Uninstall(); err != nil {
+			log.Println("Failed to uninstall service: ", err)
+			return
+		}
+		log.Println("Uninstalled service")
+		return
 	}
 
+	log.Println("Running service")
+	defer log.Println("Service stopped")
 	return osService.service.Run()
 }
 
