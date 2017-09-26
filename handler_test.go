@@ -3,9 +3,8 @@ package goms
 import "github.com/Cappta/gohelpgabs"
 
 var (
-	inputPath     = "input"
-	outputPath    = "output"
-	requiredPaths = []string{inputPath}
+	inputPath  = "input"
+	outputPath = "output"
 )
 
 func inputOutputHandler(container *gohelpgabs.Container) {

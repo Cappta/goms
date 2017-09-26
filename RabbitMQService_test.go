@@ -27,7 +27,7 @@ func TestRabbitMQService(t *testing.T) {
 	done := make(chan bool)
 	rabbitMQService := NewRabbitMQService(rabbitMQ)
 	go func() {
-		fmt.Println(rabbitMQService.Consume(serviceQueueName, inputOutputHandler, requiredPaths...))
+		fmt.Println(rabbitMQService.Consume(serviceQueueName, inputOutputHandler))
 		done <- true
 	}()
 	go rpc.Consume()

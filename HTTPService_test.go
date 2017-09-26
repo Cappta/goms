@@ -25,7 +25,7 @@ var (
 func TestHTTPService(t *testing.T) {
 	done := make(chan bool)
 	httpService := NewHTTPService(httpListenAddress)
-	httpService.Handle(httpMethod, httpListenPath, inputOutputHandler, requiredPaths...)
+	httpService.Handle(httpMethod, httpListenPath, inputOutputHandler)
 	go func() {
 		fmt.Println(httpService.Run())
 		done <- true

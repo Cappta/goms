@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/Cappta/gohelpgabs"
 	"github.com/gorilla/mux"
@@ -44,7 +43,7 @@ func (service *HTTPService) IsRunning() bool {
 }
 
 // Handle appends an entry point for the HTTP service given the callback and required paths
-func (service *HTTPService) Handle(method, path string, handle handler, requiredPaths ...string) {
+func (service *HTTPService) Handle(method, path string, handle handler) {
 	service.router.Methods(method).Path(path).HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
@@ -61,12 +60,6 @@ func (service *HTTPService) Handle(method, path string, handle handler, required
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				fprintfAndLog(w, "Error parsing JSON \"%s\" Content: %s", err.Error(), string(body))
-				return
-			}
-
-			if missingPaths := container.GetMissingPaths(requiredPaths...); len(missingPaths) > 0 {
-				w.WriteHeader(http.StatusBadRequest)
-				fprintfAndLog(w, "Message did not contain: %s", strings.Join(missingPaths, ", "))
 				return
 			}
 
