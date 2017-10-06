@@ -17,14 +17,16 @@ import (
 )
 
 var (
-	httpListenAddress = ":1337"
-	httpListenPath    = "/something"
-	httpMethod        = "POST"
+	env = map[string]string{
+		"HTTP_ListenAddress": ":1337",
+	}
+	httpListenPath = "/something"
+	httpMethod     = "POST"
 )
 
 func TestHTTPService(t *testing.T) {
 	done := make(chan bool)
-	httpService := NewHTTPService(httpListenAddress)
+	httpService := NewHTTPService(env)
 	httpService.Handle(httpMethod, httpListenPath, inputOutputHandler)
 	go func() {
 		fmt.Println(httpService.Run())
