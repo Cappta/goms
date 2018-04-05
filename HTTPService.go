@@ -12,6 +12,8 @@ import (
 )
 
 var (
+	httpAddrKey = "HTTP_ListenAddress"
+
 	errServiceRunning    = fmt.Errorf("Service is already running")
 	errServiceNotRunning = fmt.Errorf("Service is not running")
 )
@@ -26,7 +28,8 @@ type HTTPService struct {
 }
 
 // NewHTTPService creates a new HTTPService given a listen address
-func NewHTTPService(address string) (service *HTTPService) {
+func NewHTTPService(env map[string]string) (service *HTTPService) {
+	address := env[httpAddrKey]
 	if address == "" {
 		address = ":0" //Listen on any port
 	}
@@ -86,16 +89,20 @@ func fprintfAndLog(w io.Writer, format string, a ...interface{}) {
 }
 
 // Run starts the service
-func (service *HTTPService) Run() error {
+func (service *HTTPService) Run() (err error) {
 	if service.running {
 		return errServiceRunning
 	}
 
 	service.running = true
-	service.server = &http.Server{Addr: service.address, Handler: service.router}
-	err := service.server.ListenAndServe()
-	service.running = false
-	return err
+	for {
+		service.server = &http.Server{Addr: service.address, Handler: service.router}
+		err = service.server.ListenAndServe()
+		if service.running == false {
+			return
+		}
+		log.Println("HTTPService restarting: ", err)
+	}
 }
 
 // Stop stops the service
@@ -104,5 +111,6 @@ func (service *HTTPService) Stop() error {
 		return errServiceNotRunning
 	}
 
+	service.running = false
 	return service.server.Close()
 }
